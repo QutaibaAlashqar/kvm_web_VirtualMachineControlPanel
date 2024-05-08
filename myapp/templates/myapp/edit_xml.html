@@ -1,0 +1,97 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Edit XML Configuration</title>
+    <style>
+        /* General dark background */
+        body {
+            background-color: #121212;
+            color: #ffffff;
+            font-family: 'Arial', sans-serif;
+            margin: 0;
+            padding: 0;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            height: 100vh;
+        }
+
+        /* Container for the main content */
+        .container {
+            width: 80%;
+            max-width: 900px;
+            background-color: #1e1e1e;
+            border-radius: 8px;
+            padding: 20px;
+            box-shadow: 0px 4px 12px rgba(0, 0, 0, 0.4);
+            text-align: center;
+        }
+
+        /* Form styles */
+        .xml-textarea {
+            width: 97.5%;
+            height: 500px;
+            background-color: #2c2c2c;
+            color: #e6e6e6;
+            border: 1px solid #444;
+            border-radius: 6px;
+            padding: 10px;
+            margin-bottom: 10px;
+            font-family: 'Courier New', Courier, monospace;
+        }
+
+        /* Submit button styles */
+        .submit-btn {
+            background-color: #2AB415;
+            color: #ffffff;
+            border: none;
+            padding: 10px 20px;
+            margin-top: 10px;
+            border-radius: 6px;
+            cursor: pointer;
+            font-size: 16px;
+        }
+
+        .submit-btn:hover {
+            background-color: #24a110;
+        }
+
+        /* Back link */
+        .back-link {
+            display: inline-block;
+            margin-top: 15px;
+            color: #4a90e2;
+            text-decoration: none;
+            font-weight: bold;
+        }
+
+        .back-link:hover {
+            text-decoration: underline;
+        }
+
+        /* Success message */
+        .success-message {
+            color: #2AB415;
+            font-weight: bold;
+            margin-top: 10px;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>Edit XML Configuration for {{ vm_name }}</h1>
+        <form action="{% url 'update_xml' %}" method="post">
+            {% csrf_token %}
+            <input type="hidden" name="vm_name" value="{{ vm_name }}">
+            <textarea name="xml_description" rows="20" cols="80" class="xml-textarea">{{ xml_description }}</textarea>
+            <br>
+            <button type="submit" class="submit-btn">Save Changes</button>
+        </form>
+        <a href="{% url 'vm_control' %}" class="back-link">Back to VM List</a>
+        {% if saved %}
+            <div class="success-message">Changes saved successfully!</div>
+        {% endif %}
+    </div>
+</body>
+</html>

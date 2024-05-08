@@ -1,0 +1,477 @@
+{% load static %}  
+
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.5.1/jquery.min.js"></script>
+    <title>Virtual Machine Control Panel</title>
+    <style>
+
+        /* scroller */
+        ::-webkit-scrollbar {
+            width: 10px;
+        }
+        ::-webkit-scrollbar-track {
+            background: #f1f1f1;
+        }
+        ::-webkit-scrollbar-thumb {
+            background: #888;
+            border-radius: 5px;
+        }
+        ::-webkit-scrollbar-thumb:hover {
+            background: #555;
+        }
+
+
+        header {
+            background-color: #333; 
+            color: #ffffff; 
+            text-align: center; 
+        }
+        footer {
+            background-color: #333; 
+            color: #ffffff; 
+            padding: 1px;
+            text-align: center; 
+            position: relative; 
+            left: 0;
+            bottom: 0;
+            width: 99.8%; 
+        }
+        body {
+            background-color: #212121; 
+            color: #ffffff; 
+            font-family: Arial, sans-serif; 
+            margin: 0; 
+            padding: 0; 
+        }
+
+
+        .vm-container {
+            display: flex;
+            flex-direction: column;
+            border: 1px solid #444;
+            padding: 10px;
+            background-color: #333; 
+            padding: 20px;
+            margin: 30px;
+        }
+        .vm-container form button {
+            border: none;
+            padding: 10px 20px;
+            font-size: 16px;
+            margin: 4px 2px;
+            cursor: pointer;
+            border-radius: 5px;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+        }
+        .vm-name {
+            font-weight: bold;
+            font-size: 20px; 
+            margin-bottom: 10px;
+        }
+        .message {
+            color: red;
+            margin-top: 10px; 
+            font-weight: bold;
+            margin: 10px;
+        }
+        .info-details {
+            display: none;
+            margin-top: 10px;
+            padding: 10px;
+            border: 1px solid #444;
+            border-radius: 5px;
+            background-color: #444;
+        }
+
+        /* Styles for the buttons */
+        .start-button {
+            background-color: #4CAF50; 
+            border: none;
+            color: white;
+            padding: 10px 20px;
+            text-align: center;
+            text-decoration: none;
+            display: inline-block;
+            font-size: 16px;
+            margin: 4px 2px;
+            cursor: pointer;
+            border-radius: 5px;
+        }
+        .stop-button {
+            background-color: #f44336; 
+            border: none;
+            color: white;
+            padding: 10px 20px;
+            text-align: center;
+            text-decoration: none;
+            display: inline-block;
+            font-size: 16px;
+            margin: 4px 2px;
+            cursor: pointer;
+            border-radius: 5px;
+        }
+        .pause-button,
+        .resume-button {
+            background-color: #ff9800; 
+            border: none;
+            color: white;
+            padding: 10px 20px;
+            text-align: center;
+            text-decoration: none;
+            display: inline-block;
+            font-size: 16px;
+            margin: 4px 2px;
+            cursor: pointer;
+            border-radius: 5px;
+        }
+        .resume-button {
+            background-color: #2196F3; 
+            display: none; 
+        }
+
+        /* Styles for the ForceOFF button */
+        .force-off-button {
+            background-color: #f44336; 
+            border: none;
+            color: white;
+            padding: 10px 20px;
+            text-align: center;
+            text-decoration: none;
+            display: inline-block;
+            font-size: 16px;
+            margin: 4px 2px;
+            cursor: pointer;
+            border-radius: 5px;
+        }
+        .toggle-details-button {
+        background-color: #2196F3; 
+        border: none;
+        color: #ffffff; 
+        font-size: 14px;
+        cursor: pointer;
+        padding: 5px 10px;
+        border-radius: 5px;
+        transition: background-color 0.3s; 
+        outline: none; 
+        }
+        .toggle-details-button:hover {
+            background-color: #555; 
+        }
+        .btn-icon {
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+        }
+        .resume-pause-btns {
+            display: flex;
+            flex-direction: row;
+        }
+        .detailsAndStatus {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        /* settings */
+        .dropdown {
+            position: relative;
+            display: inline-block;
+        }
+        .dropbtn {
+            background-color: transparent;
+            color: white;
+            padding: 10px 20px;
+            font-size: 16px;
+            border: none;
+            cursor: pointer;
+            border-radius: 5px;
+        }
+        .dropdown-content {
+            display: none;
+            position: absolute;
+            background-color: #333;
+            min-width: 160px;
+            box-shadow: 0px 8px 16px 0px rgba(0,0,0,0.2);
+            z-index: 1;
+            border-radius: 5px;
+            overflow: hidden;
+            transition: all 0.3s ease;
+            margin-top: 5px;
+            padding: 5px 0;
+        }
+        .dropdown-content button {
+            color: white;
+            padding: 10px 20px;
+            text-decoration: none;
+            display: block;
+            background-color: transparent;
+            border: none;
+            width: 100%;
+            text-align: left;
+            cursor: pointer;
+            transition: background-color 0.3s;
+        }
+        .dropdown-content button:hover {
+            background-color: #56A96C;
+        }
+        .dropdown:hover .dropdown-content {
+            display: block;
+        }
+        .dropdown:hover .dropbtn {
+            background-color: #56A96C;
+        }
+        .sub-dropdown-content {
+            display: none;
+            position: relative;
+            background-color: #152B07;
+            min-width: 160px;
+            box-shadow: 0px 8px 16px 0px rgba(0,0,0,0.2);
+            z-index: 1;
+            margin-top: 0px;
+            right: 0;
+            border-radius: 5px;
+        }
+
+        .create-disk-link {
+            color: #fff; 
+            background-color: #007bff;
+            padding: 10px 0px; 
+            border-radius: 5px; 
+            text-decoration: none; 
+            transition: background-color 0.3s; 
+        }
+
+        .create-disk-link:hover {
+            background-color: #0056b3;
+        }
+
+    </style>
+</head>
+<body>
+
+    <header>
+        <h1 style="padding: 1%; font-size: 30px;">Virtual Machine Control Panel</h1>
+    </header>
+    
+    {% if message %}
+        <div style="font-size: 15px; margin-left: 2%; font-weight: bold;" class="alert alert-success" role="alert">
+            {{ message }}
+        </div>
+    {% endif %}
+    {% if error %}
+        <div style="font-size: 15px; margin-left: 2%; font-weight: bold;" class="alert alert-danger" role="alert">
+            {{ error }}
+        </div>
+    {% endif %}
+
+    <!-- VM containers -->
+    {% for vm in vm_info %}
+    <div class="vm-container">
+        <div class="detailsAndStatus">
+            <button class="toggle-details-button" onclick="toggleDetails('{{ vm.name }}')">
+                <span>&#8505;</span>&nbsp;Details
+            </button>
+            <p class="vm-name">{{ vm.name }}</p>
+            <p class="vm-state">Status: {{ vm.state }}</p>
+        </div>
+
+        <div id="details-{{ vm.name }}" class="info-details">
+            <!-- VM details here -->
+            {% if vm.state %}
+                <p class="vm-state">State: {{ vm.state }}</p>
+            {% endif %}
+            {% if vm.id %}
+                <p>ID: {{ vm.id }}</p>
+            {% endif %}
+            {% if vm.uuid %}
+                <p>UUID: {{ vm.uuid }}</p>
+            {% endif %}
+            {% if vm.os_type %}
+                <p>OS Type: {{ vm.os_type }}</p>
+            {% endif %}
+            {% if vm.cpu_count %}
+                <p>CPU(s): {{ vm.cpu_count }}</p>
+            {% endif %}
+            {% if vm.cpu_time %}
+                <p>CPU time: {{ vm.cpu_time }} seconds</p>
+            {% endif %}
+            {% if vm.max_memory %}
+                <p>Max memory: {{ vm.max_memory }} KiB</p>
+            {% endif %}
+            {% if vm.used_memory %}
+                <p>Used memory: {{ vm.used_memory }} KiB</p>
+            {% endif %}
+            {% if vm.persistent %}
+                <p>Persistent: {{ vm.persistent }}</p>
+            {% endif %}
+            {% if vm.autostart %}
+                <p>Autostart: {{ vm.autostart }}</p>
+            {% endif %}
+            {% if vm.managed_save %}
+                <p>Managed save: {{ vm.managed_save }}</p>
+            {% endif %}
+        </div>
+
+        <!-- Start VM button -->
+        {% if vm.state == 'Stopped' %}
+            <form action="{% url 'start_vm' %}" method="post">
+                {% csrf_token %}
+                <input type="hidden" name="vm_name" value="{{ vm.name }}">
+                <button class="start-button btn-icon" type="submit">
+                    <span>&#9654;</span>&nbsp;Start
+                </button>
+            </form>
+        {% endif %}
+
+        <!-- Stop VM button -->
+        {% if vm.state == 'Running' %}
+            <form action="{% url 'stop_vm' %}" method="post">
+                {% csrf_token %}
+                <input type="hidden" name="vm_name" value="{{ vm.name }}">
+                <button class="stop-button btn-icon" type="submit">
+                    <span>&#9724;</span>&nbsp;Stop
+                </button>
+            </form>
+        {% endif %}
+
+        <!-- Resume VM button -->
+        {% if vm.state == 'Running' %}
+            <div class="resume-pause-btns">
+                <form action="{% url 'pause_vm' %}" method="post">
+                    {% csrf_token %}
+                    <input type="hidden" name="vm_name" value="{{ vm.name }}">
+                    <button class="pause-button btn-icon" type="submit">
+                        <span>&#10074;&#10074;</span>&nbsp;Pause 
+                    </button>
+                </form>
+                <form action="{% url 'resume_vm' %}" method="post">
+                    {% csrf_token %}
+                    <input type="hidden" name="vm_name" value="{{ vm.name }}">
+                    <button class="pause-button btn-icon" type="submit">
+                        <span>&#9654;</span>&nbsp;Resume 
+                    </button>
+                </form>
+
+                <div class="dropdown">
+                    <button style="background-color: #2AB415;" class="dropbtn">Settings</button>
+                    <div class="dropdown-content">
+                        
+                        <form action="{% url 'edit_xml' %}" method="get">
+                            <input type="hidden" name="vm_name" value="{{ vm.name }}">
+                            <button type="submit" class="edit-xml-button">Edit XML</button>
+                        </form>
+
+                        <div class="sub-dropdown">
+                            <button class="sub-dropbtn">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;New Disk&nbsp;&nbsp;&nbsp;&nbsp;></button>
+                            <div class="sub-dropdown-content">
+                                <form action="{% url 'create_disk_form' vm.name %}" method="get">
+                                    <input type="hidden" name="vm_name" value="{{ vm.name }}">
+                                    <button type="submit" class="create-disk-link">Create Disk</button>
+                                </form>
+                                <form action="{% url 'list_existing_disks' vm.name %}" method="get">
+                                    <input type="hidden" name="vm_name" value="{{ vm.name }}">
+                                    <button type="submit" class="create-disk-link">Add Existing Disk or Image</button>
+                                </form>
+                            </div>
+                        </div>
+                        <button>Network</button>            
+                        <button>Change CPU</button>
+                        <button>Change Memory (RAM)</button>
+                    </div>
+                </div>
+            </div>
+        {% endif %}
+        
+        <!-- Force Off VM button -->
+        {% if vm.state == 'Running' %}
+        <form action="{% url 'force_off_vm' %}" method="post">
+            {% csrf_token %}
+            <input type="hidden" name="vm_name" value="{{ vm.name }}">
+            <button class="force-off-button btn-icon" type="submit">
+                <span>&#9888;</span>&nbsp;Force
+            </button>
+        </form>
+        {% endif %}
+
+        <!-- Status message for each VM -->
+        <p id="status-{{ vm.name }}" class="message" style="display: none;"></p>
+    </div>
+    {% endfor %}
+
+    <!-- JS -->
+    {% block script %}
+    <script src="{% static '/js/script_1.js' %}"></script>
+
+    <!-- SCRIPT -->
+    <script>
+        function toggleDetails(vmName) {
+            var details = document.getElementById('details-' + vmName);
+            if (details.style.display === "none") {
+                details.style.display = "block";
+            } else {
+                details.style.display = "none";
+            }
+        }
+
+        function reloadPage() {
+            setTimeout(function() {
+                window.location.reload(true);
+            }, 500);
+        }
+
+        document.addEventListener('DOMContentLoaded', function() {
+            document.querySelectorAll('.vm-container').forEach(container => {
+
+                const stateElement = container.querySelector('.vm-state');
+                const resumeButton = container.querySelector('.resume-button');
+                const pauseButton = container.querySelector('.pause-button');
+
+                if (stateElement) {  
+                    const state = stateElement.textContent.trim().split(": ")[1]; 
+
+                    if (state === 'Paused' && resumeButton && pauseButton) {
+                        resumeButton.style.display = 'block';
+                        pauseButton.style.display = 'none';
+                    } else if (state === 'Running' && resumeButton && pauseButton) {
+                        resumeButton.style.display = 'none';
+                        pauseButton.style.display = 'block';
+                    }
+                } else {
+                    console.error('State element not found in container', container);
+                }
+            });
+        });
+
+        // JavaScript for dropdown menu
+        document.addEventListener('DOMContentLoaded', function() {
+            var subDropdowns = document.getElementsByClassName('sub-dropdown');
+
+            for (var i = 0; i < subDropdowns.length; i++) {
+                var subDropdown = subDropdowns[i];
+                subDropdown.addEventListener('mouseenter', function() {
+                    var subDropdownContent = this.querySelector('.sub-dropdown-content');
+                    subDropdownContent.style.display = 'block';
+                });
+
+                subDropdown.addEventListener('mouseleave', function() {
+                    var subDropdownContent = this.querySelector('.sub-dropdown-content');
+                    subDropdownContent.style.display = 'none';
+                });
+            }
+        });
+
+
+
+    </script>
+    {% endblock script %}
+    <footer>
+        <p>&copy; 2024 Virtual Machine Control Panel | Copyright © Özgur Entegrasyon 2018 | Kutay Askar 1917 </p>
+    </footer>
+</body>
+</html>

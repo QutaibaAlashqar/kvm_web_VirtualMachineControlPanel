@@ -1,0 +1,125 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Create Disk</title>
+    <style>
+        body {
+            padding: 20px;
+            font-family: Arial, sans-serif;
+            background-color: #121212;
+            color: #ffffff;
+            margin: 0;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            height: 100vh;
+        }
+
+        form {
+            width: 300px;
+            padding: 20px;
+            border-radius: 5px;
+            background-color: #333333;
+            box-shadow: 0 0 10px rgba(0, 0, 0, 0.5);
+        }
+
+        .form-control {
+            width: 100%;
+            padding: 10px;
+            margin: 10px 0 20px 0;
+            display: inline-block;
+            border: 1px solid #555;
+            border-radius: 4px;
+            background-color: #222;
+            color: #ddd;
+            box-sizing: border-box;
+        }
+
+        .form-control:focus {
+            outline: none;
+            border-color: #77dd77;
+            background-color: #1e1e1e;
+        }
+
+        label {
+            color: #ccc;
+        }
+
+        .btn {
+            background-color: #4CAF50;
+            color: white;
+            padding: 10px 20px;
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+            width: 100%;
+            transition: background-color 0.3s;
+        }
+
+        .btn:hover {
+            background-color: #45a049;
+        }
+
+        h2 {
+            margin-bottom: 20px;
+            color: #f0f0f0;
+        }
+
+        .message {
+            margin-top: 20px;
+            padding: 10px;
+            border-radius: 5px;
+        }
+
+        .success {
+            background-color: #4CAF50;
+            color: white;
+        }
+
+        .error {
+            background-color: #f44336;
+            color: white;
+        }
+
+        /* Back link */
+        .back-link {
+            display: inline-block;
+            margin-top: 15px;
+            color: #4a90e2;
+            text-decoration: none;
+            font-weight: bold;
+            margin-left: 30%;
+        }
+
+        .back-link:hover {
+            text-decoration: underline;
+        }
+    </style>
+</head>
+<body>
+    <h2>Create Disk for {{ vm_name }}</h2>
+    <form action="{% url 'submit_create_disk' vm_name %}" method="post">
+        {% csrf_token %}
+        <label for="size_gb">Disk Size (GB):</label>
+        <input type="number" id="size_gb" name="size_gb" required min="1" class="form-control">
+        <button type="submit" class="btn">Create Disk</button>
+        <a href="{% url 'vm_control' %}" class="back-link">Back to VM List</a>
+    </form>
+
+    <!-- Display success message -->
+    {% if success_message %}
+    <div class="message success">
+        {{ success_message }}
+    </div>
+    {% endif %}
+
+    <!-- Display error message -->
+    {% if error_message %}
+    <div class="message error">
+        {{ error_message }}
+    </div>
+    {% endif %}
+</body>
+</html>

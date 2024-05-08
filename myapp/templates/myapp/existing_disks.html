@@ -1,0 +1,205 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Existing Disks and Images</title>
+    <style>
+        body {
+            margin: 0;
+            padding: 10px;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background-color: #121212;
+            color: #ffffff;
+            display: flex;
+            flex-direction: column; /* Changed to column layout */
+            align-items: center;
+            height: 100vh;
+        }
+
+        h2 {
+            color: #f0f0f0;
+            text-align: center;
+            width: 100%;
+            margin-bottom: 20px;
+        }
+
+        .columns-container {
+            display: flex;
+            justify-content: space-around; /* Distributes space between columns */
+            width: 100%; /* Full width to accommodate both columns */
+        }
+
+        .column {
+            width: 50%; /* Slightly reduced for more margin space */
+            margin: 0 20px;
+            display: flex;
+            flex-direction: column;
+            background-color: #252525;
+            padding: 20px;
+            border-radius: 10px;
+            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.5);
+            overflow: hidden;
+        }
+
+        h3 {
+            text-align: center;
+            font-size: 20px;
+            margin-bottom: 20px;
+            border-bottom: 1px solid #444;
+            padding-bottom: 10px;
+        }
+
+        ul {
+            list-style-type: none;
+            padding: 0;
+            overflow-y: auto;
+            max-height: 900px; /* Set a max-height for scrollable list */
+        }
+
+        li {
+            background-color: #333333;
+            margin: 8px 0;
+            padding: 10px;
+            border-radius: 5px;
+            transition: transform 0.2s ease-in-out, box-shadow 0.2s ease-in-out;
+        }
+
+        li:hover {
+            transform: scale(1.02);
+            box-shadow: 0 2px 10px rgba(255, 255, 255, 0.2);
+        }
+
+        /* Scrollbar styling */
+        ::-webkit-scrollbar {
+            width: 8px;
+        }
+
+        ::-webkit-scrollbar-track {
+            background: #1e1e1e;
+        }
+
+        ::-webkit-scrollbar-thumb {
+            background-color: #636363;
+            border-radius: 10px;
+            border: none;
+        }
+
+        .back-link {
+            display: inline-block;
+            margin-top: 15px;
+            color: #4a90e2;
+            text-decoration: none;
+            font-weight: bold;
+        }
+
+        .back-link:hover {
+            text-decoration: underline;
+        }
+
+        button {
+            background-color: #4CAF50; /* Green background for positive actions */
+            color: white;
+            padding: 5px 10px;
+            border: none;
+            border-radius: 10px;
+            cursor: pointer;
+            transition: background-color 0.2s, box-shadow 0.2s;
+            font-size: 14px;
+            font-weight: bold;
+            margin: 5px 0; /* Space between buttons */
+            width: 25%; /* Ensures the button stretches to the container width */
+        }
+
+        /* Hover effect for general buttons */
+        button:hover {
+            background-color: #45a049; /* Darker shade of green on hover */
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.2);
+        }
+
+        /* Delete button specific styling */
+        .btn-delete {
+            background-color: #f44336; /* Red background for delete actions */
+        }
+
+        /* Hover effect for delete buttons */
+        .btn-delete:hover {
+            background-color: #d32f2f; /* Darker shade of red on hover */
+        }
+
+        /* Styling for form inside list items to handle margins */
+        li form {
+            margin-top: 2px;
+            display: flex;
+            justify-content: center; 
+            align-items: center; 
+            flex-wrap: wrap; 
+        }
+
+        /* Reduce the spacing and increase usability in mobile views */
+        @media (max-width: 768px) {
+            li form {
+                width: 100%; /* Stacks buttons on smaller screens */
+                margin: 5px 0;
+            }
+        }
+
+        .message {
+            color: #ffffff;
+            background-color: #4CAF50; /* Green for success */
+            padding: 10px;
+            margin: 10px 0;
+            border-radius: 5px;
+            width: 80%;
+            text-align: center;
+        }
+
+    </style>
+</head>
+<body>
+    <h2>Existing Disks and Images for {{ vm_name }}</h2>
+    
+    <div class="columns-container">
+        <div class="column">
+            <h3>Disks</h3>
+            <ul>
+                {% for disk in disks %}
+                <li>
+                    {{ disk }}
+                    <!-- Use this Disk Button -->
+                    <form action="{% url 'use_disk' vm_name disk %}" method="post">
+                        {% csrf_token %}
+                        <button type="submit" class="btn-use">Attach this Disk</button>
+                    </form>
+                    <!-- Delete this Disk Button -->
+                    <form action="{% url 'delete_disk' vm_name disk %}" method="post">
+                        {% csrf_token %}
+                        <button type="submit" class="btn-delete">Delete this Disk</button>
+                    </form>
+                </li>
+                {% endfor %}
+            </ul>
+        </div>
+        <div class="column">
+            <h3>Images</h3>
+            <ul>
+                {% for image in images %}
+                <li>
+                    {{ image }}
+                    <!-- Use this Image Button -->
+                    <form action="{% url 'use_image' vm_name image %}" method="post">
+                        {% csrf_token %}
+                        <button type="submit" class="btn-use">Use this Image</button>
+                    </form>
+                    <!-- Delete this Image Button -->
+                    <form action="{% url 'delete_image' vm_name image %}" method="post">
+                        {% csrf_token %}
+                        <button type="submit" class="btn-delete">Delete this Image</button>
+                    </form>
+                </li>
+                {% endfor %}
+            </ul>
+        </div>
+    </div>
+    <a href="{% url 'vm_control' %}" class="back-link">Back to VM List</a>
+</body>
+</html>
