@@ -1,0 +1,14 @@
+{% block content %}
+<h2>Update Network: {{ network_name }}</h2>
+
+<form method="post" action="{% url 'update_network' network_name=network_name %}">
+    {% csrf_token %}
+    <div>
+        <label>Autostart:</label>
+        <input type="checkbox" name="autostart" {% if autostart %} checked {% endif %}>
+    </div>
+    <button type="submit">Update Network</button>
+</form>
+
+<a href="{% url 'list_networks' vm.name %}">Back to Networks</a>
+{% endblock %}

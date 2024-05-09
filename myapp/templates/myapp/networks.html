@@ -1,0 +1,74 @@
+{% block content %}
+<style>
+    body {
+        background-color: #121212; /* Dark background color */
+        color: #fff; /* Light text color */
+        font-family: Arial, sans-serif;
+    }
+
+    .container {
+        max-width: 800px;
+        margin: 0 auto;
+        padding: 20px;
+    }
+
+    .btn {
+        display: inline-block;
+        padding: 10px 20px;
+        background-color: #007bff; /* Blue button color */
+        color: #fff; /* Light text color */
+        text-decoration: none;
+        border-radius: 5px;
+        transition: background-color 0.3s;
+    }
+
+    .btn:hover {
+        background-color: #0056b3; /* Darker blue on hover */
+    }
+
+    .list {
+        list-style: none;
+        padding: 0;
+    }
+
+    .list li {
+        margin-bottom: 10px;
+    }
+
+    /* Dark mode styles */
+    .dark-mode body {
+        background-color: #222; /* Darker background color */
+        color: #eee; /* Lighter text color */
+    }
+
+    .dark-mode .btn {
+        background-color: #6c757d; /* Gray button color */
+    }
+
+    .dark-mode .btn:hover {
+        background-color: #5a6268; /* Darker gray on hover */
+    }
+</style>
+
+<div class="container">
+    <h1>Networks</h1>
+
+    {% if not default_network_exists %}
+        <p>No default network found.</p>
+        <form action="{% url 'create_default_network' %}" method="post">
+            {% csrf_token %}
+            <button type="submit" class="btn btn-primary">Create Default Network</button>
+        </form>
+    {% else %}
+        <p>Default network is set up.</p>
+        <ul class="list">
+            {% for network in networks %}
+                <li>{{ network.name }} {% if network.is_default %}(Default){% endif %}
+                    <a href="{% url 'update_network' network.name %}" class="btn">Edit</a>
+                    <a href="{% url 'delete_network' network.name %}" class="btn" onclick="return confirm('Are you sure?');">Delete</a>
+                </li>
+            {% endfor %}
+        </ul>
+    {% endif %}
+</div>
+{% endblock %}

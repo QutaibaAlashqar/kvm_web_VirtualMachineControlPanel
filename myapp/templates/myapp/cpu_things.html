@@ -1,0 +1,117 @@
+{% block content %}
+<style>
+    body {
+        background-color: #121212; /* Dark background color */
+        color: #fff; /* Light text color */
+        font-family: Arial, sans-serif;
+    }
+
+    .container {
+        max-width: 800px;
+        margin: 0 auto;
+        padding: 20px;
+    }
+
+    h2 {
+        font-size: 24px;
+        margin-bottom: 20px;
+    }
+
+    label {
+        display: block;
+        margin-bottom: 5px;
+    }
+
+    input[type="number"] {
+        padding: 10px;
+        border-radius: 5px;
+        border: 1px solid #555;
+        background-color: #333;
+        color: #fff;
+        margin-bottom: 10px;
+        width: 100%;
+    }
+
+    button[type="submit"] {
+        padding: 10px 20px;
+        border: none;
+        border-radius: 5px;
+        background-color: #007bff; /* Blue button color */
+        color: #fff; /* Light text color */
+        cursor: pointer;
+        transition: background-color 0.3s;
+    }
+
+    button[type="submit"]:hover {
+        background-color: #0056b3; /* Darker blue on hover */
+    }
+
+    a {
+        color: #007bff;
+        text-decoration: none;
+        margin-right: 10px;
+    }
+
+    a:hover {
+        text-decoration: underline;
+    }
+
+    /* Dark mode styles */
+    .dark-mode body {
+        background-color: #222; /* Darker background color */
+        color: #eee; /* Lighter text color */
+    }
+
+    .dark-mode input[type="number"] {
+        background-color: #444; /* Darker background for input */
+        border: 1px solid #888; /* Lighter border for input */
+    }
+
+    .dark-mode button[type="submit"] {
+        background-color: #6c757d; /* Gray button color */
+    }
+
+    .dark-mode button[type="submit"]:hover {
+        background-color: #5a6268; /* Darker gray on hover */
+    }
+
+    .dark-mode a {
+        color: #6c757d; /* Gray link color */
+    }
+
+    .dark-mode a:hover {
+        color: #8a8a8a; /* Lighter gray on hover */
+    }
+</style>
+
+<div class="container">
+    <h2>Change Resources for {{ vm_name }}</h2>
+
+    {% if messages %}
+        <ul>
+            {% for message in messages %}
+                <li>{{ message }}</li>
+            {% endfor %}
+        </ul>
+    {% endif %}
+
+    <form method="post" action="{% url 'cpu_things' vm_name %}">
+        {% csrf_token %}
+        <div>
+            <label for="cpu_cores">CPU Cores:</label>
+            <input type="number" id="cpu_cores" name="cpu_cores" required value="{{ current_cpus }}">
+        </div>
+        <div>
+            <label for="memory">Memory (KiB):</label>
+            <input type="number" id="memory" name="memory" required value="{{ current_memory }}">
+        </div>
+        <button type="submit">Update Resources</button>
+    </form>
+
+    {% if show_restart_button %}
+        <a href="{% url 'restart_vm' vm_name %}">Restart VM</a>
+    {% endif %}
+
+    <a href="{% url 'vm_control' %}">Go Back To VM</a>
+</div>
+{% endblock %}

@@ -16,6 +16,8 @@ from django.views.decorators.http import require_http_methods
 from django.views.decorators.http import require_http_methods, require_POST
 from .libvirt_helpers import get_libvirt_connection
 from django.views.decorators.http import require_POST
+from django.contrib import messages
+import time  
 
 logger = logging.getLogger(__name__)
 
@@ -141,23 +143,30 @@ def start_vm(request):
 
 
 def start_virtual_machine(vm_name):
-    conn = libvirt.open('qemu:///system')
-    if conn is None:
-        return False, 'Failed to open connection to qemu:///system'
-    
-    domain = conn.lookupByName(vm_name)
-    if domain is None:
-        return False, f'Virtual machine {vm_name} not found'
+    try:
+        conn = libvirt.open('qemu:///system')
+        if conn is None:
+            return False, 'Failed to open connection to qemu:///system'
+        
+        domain = conn.lookupByName(vm_name)
+        if domain is None:
+            return False, f'Virtual machine {vm_name} not found'
 
-    # Check if the VM is already running
-    if domain.isActive():
-        return False, f'Virtual machine {vm_name} is already running'
-    
-    # Attempt to start the VM
-    if domain.create() == 0:
-        return True, f'Successfully started virtual machine {vm_name}'
-    else:
-        return False, f'Failed to start virtual machine {vm_name}'
+        # Check if the VM is already running
+        if domain.isActive():
+            return False, f'Virtual machine {vm_name} is already running'
+        
+        # Attempt to start the VM
+        if domain.create() == 0:
+            return True, f'Successfully started virtual machine {vm_name}'
+        else:
+            return False, f'Failed to start virtual machine {vm_name}'
+    except libvirt.libvirtError as e:
+        # Check if the error is related to interface MTU
+        if "Cannot get interface MTU" in str(e):
+            return False, "Failed to start virtual machine. Interface MTU is not available."
+        else:
+            return False, str(e)
 
 
 ##########
@@ -509,4 +518,148 @@ def delete_image(request, vm_name, image):
 
 ##########
 ##########   # Add Network
+##########
+
+
+def list_networks(request, vm_name):
+    conn = libvirt.open('qemu:///system')
+    if conn is None:
+        return render(request, 'myapp/error.html', {'error': 'Failed to open connection to qemu:///system'})
+    
+    try:
+        default_network = conn.networkLookupByName('default')
+        networks = [{'name': network.name(), 'is_default': network.name() == 'default'} for network in conn.listAllNetworks()]
+    except libvirt.libvirtError:
+        default_network = None
+        networks = [{'name': network.name(), 'is_default': False} for network in conn.listAllNetworks()]
+    finally:
+        conn.close()
+
+    context = {
+        'networks': networks,
+        'default_network_exists': default_network is not None
+    }
+    return render(request, 'myapp/networks.html', context)
+
+
+def create_default_network(request):
+    conn = libvirt.open('qemu:///system')
+    if conn is None:
+        return render(request, 'myapp/error.html', {'error': 'Failed to open connection to qemu:///system'})
+
+    xml_desc = '''
+    <network>
+        <name>default</name>
+        <bridge name='virbr0' stp='on' delay='0'/>
+        <ip address='192.168.122.1' netmask='255.255.255.0'>
+            <dhcp>
+                <range start='192.168.122.2' end='192.168.122.254'/>
+            </dhcp>
+        </ip>
+    </network>
+    '''
+    try:
+        network = conn.networkDefineXML(xml_desc)
+        if network and network.create() == 0:
+            network.setAutostart(1)
+            return redirect('list_networks')
+        else:
+            return render(request, 'myapp/error.html', {'error': 'Failed to create default network'})
+    finally:
+        conn.close()
+
+
+def update_network(request, network_name):
+    conn = libvirt.open('qemu:///system')
+    if conn is None:
+        return render(request, 'myapp/error.html', {'error': 'Failed to open connection to qemu:///system'})
+
+    try:
+        network = conn.networkLookupByName(network_name)
+        autostart = network.autostart() == 1
+        # Assuming you have form handling here for network settings update
+        if request.method == 'POST':
+            autostart = request.POST.get('autostart') == 'on'
+            network.setAutostart(autostart)
+            # Redirect to the list with the network_name, assuming network_name could be used as vm_name
+            return redirect(reverse('list_networks', kwargs={'vm_name': network_name}))
+        else:
+            # If GET, show the form or settings
+             return render(request, 'myapp/update_network.html', {'network_name': network_name, 'autostart': autostart})
+    finally:
+        conn.close()
+
+
+def delete_network(request, network_name):
+    conn = libvirt.open('qemu:///system')
+    if conn is None:
+        return render(request, 'myapp/error.html', {'error': 'Failed to open connection to qemu:///system'})
+
+    try:
+        network = conn.networkLookupByName(network_name)
+        network.destroy()  
+        network.undefine()  
+        return redirect('list_networks')
+    finally:
+        conn.close()
+
+
+##########
+##########   # CPU
+##########
+
+
+def restart_vm(request, vm_name):
+    # Simulate a delay to mimic the restart process
+    time.sleep(2)  # Sleep for 2 seconds
+    
+    # Display a success message
+    messages.success(request, 'Virtual machine restarted successfully.')
+
+    # Redirect back to the cpu_things view after the restart
+    return redirect('cpu_things', vm_name=vm_name)
+    
+
+def cpu_things(request, vm_name):
+    conn = libvirt.open('qemu:///system')
+    if conn is None:
+        messages.error(request, 'Failed to open connection to qemu:///system')
+        return redirect('cpu_things', vm_name=vm_name)
+
+    domain = conn.lookupByName(vm_name)
+    if request.method == 'POST':
+        cpu_cores = request.POST.get('cpu_cores')
+        memory = request.POST.get('memory')  # Memory in KiB
+
+        try:
+            # Update CPU cores
+            domain.setVcpus(int(cpu_cores))
+            # Update memory in KiB
+            domain.setMemory(int(memory))
+            messages.success(request, 'Resources updated successfully.')
+            messages.info(request, 'Machine needs to be restarted for changes to take effect.')
+            show_restart_button = True
+        except libvirt.libvirtError as e:
+            messages.error(request, str(e))
+            show_restart_button = False
+        finally:
+            if conn:
+                conn.close()
+
+        return redirect('cpu_things', vm_name=vm_name)  # Redirect to the same view after updating resources
+    else:
+        # Prefill form with current settings
+        current_memory = domain.info()[2]
+        current_cpus = domain.info()[3]
+        show_restart_button = True
+        return render(request, 'myapp/cpu_things.html', {
+            'vm_name': vm_name,
+            'current_memory': current_memory,
+            'current_cpus': current_cpus,
+            'show_restart_button': show_restart_button
+        })
+
+
+##########
+##########
 ##########

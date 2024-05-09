@@ -379,10 +379,15 @@
                                     <button type="submit" class="create-disk-link">Add Existing Disk or Image</button>
                                 </form>
                             </div>
-                        </div>
-                        <button>Network</button>            
-                        <button>Change CPU</button>
-                        <button>Change Memory (RAM)</button>
+                        </div> 
+                        <form action="{% url 'list_networks' vm.name %}" method="get">
+                            <input type="hidden" name="vm_name" value="{{ vm.name }}">
+                            <button type="submit" class="network">Network</button>
+                        </form>  
+                        <form action="{% url 'cpu_things' vm_name=vm.name %}" method="get">
+                            <input type="hidden" name="vm_name" value="{{ vm.name }}">
+                            <button type="submit" class="cpu">CPU / RAM</button>
+                        </form>      
                     </div>
                 </div>
             </div>
@@ -448,22 +453,41 @@
             });
         });
 
-        // JavaScript for dropdown menu
+
+
         document.addEventListener('DOMContentLoaded', function() {
-            var subDropdowns = document.getElementsByClassName('sub-dropdown');
+            var subDropdowns = document.getElementsByClassName('sub-dropbtn');
 
             for (var i = 0; i < subDropdowns.length; i++) {
-                var subDropdown = subDropdowns[i];
-                subDropdown.addEventListener('mouseenter', function() {
-                    var subDropdownContent = this.querySelector('.sub-dropdown-content');
-                    subDropdownContent.style.display = 'block';
-                });
-
-                subDropdown.addEventListener('mouseleave', function() {
-                    var subDropdownContent = this.querySelector('.sub-dropdown-content');
-                    subDropdownContent.style.display = 'none';
+                subDropdowns[i].addEventListener('click', function() {
+                    var subDropdownContent = this.nextElementSibling;  // assumes sub-dropdown-content is immediately after button
+                    if (subDropdownContent.style.display === 'block') {
+                        subDropdownContent.style.display = 'none';
+                    } else {
+                        subDropdownContent.style.display = 'block';
+                        // Optional: close other open sub-dropdowns
+                        var openDropdowns = document.getElementsByClassName('sub-dropdown-content');
+                        for (var j = 0; j < openDropdowns.length; j++) {
+                            if (openDropdowns[j] !== subDropdownContent) {
+                                openDropdowns[j].style.display = 'none';
+                            }
+                        }
+                    }
                 });
             }
+
+            // Optional: close dropdowns when clicking elsewhere on the page
+            window.onclick = function(event) {
+                if (!event.target.matches('.sub-dropbtn')) {
+                    var dropdowns = document.getElementsByClassName('sub-dropdown-content');
+                    for (var i = 0; i < dropdowns.length; i++) {
+                        var openDropdown = dropdowns[i];
+                        if (openDropdown.style.display === 'block') {
+                            openDropdown.style.display = 'none';
+                        }
+                    }
+                }
+            };
         });
 
 
